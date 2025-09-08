@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { Search, User, Settings, LogOut, Menu, Maximize, Minimize, RefreshCw, HelpCircle, Sun, Moon, Monitor } from 'lucide-react';
 import NotificationCenter from '../UI/NotificationCenter';
 
