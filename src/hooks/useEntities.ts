@@ -113,7 +113,7 @@ export const useEntities = () => {
     return entities.filter(entity => entity.score >= minScore);
   }, [entities]);
 
-  const getTopEntities = useCallback(limit: number = 10): Entity[] => {
+  const getTopEntities = useCallback((limit: number = 10): Entity[] => {
     return [...entities]
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
