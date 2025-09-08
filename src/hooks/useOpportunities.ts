@@ -158,7 +158,7 @@ export const useOpportunities = () => {
     return opportunities.filter(opportunity => opportunity.probability >= minProbability);
   }, [opportunities]);
 
-  const getHighValueOpportunities = useCallback>(minValue: number): Opportunity[] => {
+  const getHighValueOpportunities = useCallback((minValue: number): Opportunity[] => {
     return opportunities.filter(opportunity => opportunity.value >= minValue);
   }, [opportunities]);
 
