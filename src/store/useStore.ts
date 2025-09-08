@@ -1,162 +1,268 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  Entity,
+  Company,
   Contact,
   Mission,
   Opportunity,
-  User,
-  Interaction,
-  AppState,
-  StoreActions,
+  Collaborator,
+  CompanyType,
+  LegalForm,
+  MissionStatus,
+  OpportunityStatus,
+  Location,
+  Sector,
+  FinancialData
 } from "../types";
+import { AppState, StoreActions } from "../types/frontend";
 
 interface CombinedState extends AppState, StoreActions {}
 
 // Fonction de calcul du score selon le cahier des charges
-const calculateEntityScore = (entity: Omit<Entity, "score">): number => {
+const calculateCompanyScore = (company: Company, financialData?: FinancialData): number => {
   let score = 0;
 
-  // CA (40%)
-  if (entity.revenue && entity.revenue >= 100_000_000) score += 40;
-  else if (entity.revenue && entity.revenue >= 50_000_000) score += 30;
-  else if (entity.revenue && entity.revenue >= 10_000_000) score += 20;
-  else score += 10;
+  // CA (40%) - basé sur les données financières
+  if (financialData?.turnover) {
+    if (financialData.turnover >= 100_000_000) score += 40;
+    else if (financialData.turnover >= 50_000_000) score += 30;
+    else if (financialData.turnover >= 10_000_000) score += 20;
+    else score += 10;
+  } else {
+    score += 5; // Score minimal si pas de CA
+  }
 
-  // Effectifs (30%)
-  if (entity.employees && entity.employees >= 100) score += 30;
-  else if (entity.employees && entity.employees >= 50) score += 25;
-  else if (entity.employees && entity.employees >= 20) score += 20;
-  else if (entity.employees && entity.employees >= 10) score += 15;
-  else score += 10;
+  // Effectifs (30%) - basé sur les données financières
+  if (financialData?.workforce) {
+    if (financialData.workforce >= 100) score += 30;
+    else if (financialData.workforce >= 50) score += 25;
+    else if (financialData.workforce >= 20) score += 20;
+    else if (financialData.workforce >= 10) score += 15;
+    else score += 10;
+  } else {
+    score += 5; // Score minimal si pas d'effectifs
+  }
 
   // Statut (30%)
-  if (entity.status === "client") score += 30;
-  else score += 15;
+  if (!company.isProspect) score += 30; // Client
+  else score += 15; // Prospect
 
   return Math.min(100, score);
 };
 
-// Données de démonstration
-const mockEntities: Entity[] = [
+// Données de démonstration basées sur les nouveaux modèles
+const mockLocations: Location[] = [
   {
-    id: "1",
+    id: 1,
+    country: "Sénégal",
+    city: "Dakar",
+    address: "Avenue Léopold Sédar Senghor",
+    urlMaps: "https://maps.google.com/dakar"
+  },
+  {
+    id: 2,
+    country: "Sénégal", 
+    city: "Thiès",
+    address: "Route de Dakar",
+    urlMaps: "https://maps.google.com/thies"
+  },
+  {
+    id: 3,
+    country: "Sénégal",
+    city: "Saint-Louis", 
+    address: "Rue Blaise Diagne",
+    urlMaps: "https://maps.google.com/saint-louis"
+  }
+];
+
+const mockSectors: Sector[] = [
+  { id: 1, name: "Industrie", description: "Secteur industriel" },
+  { id: 2, name: "Télécommunications", description: "Secteur des télécommunications" },
+  { id: 3, name: "ONG", description: "Organisations non gouvernementales" },
+  { id: 4, name: "EPE", description: "Entreprises publiques d'État" }
+];
+
+const mockCompanies: Company[] = [
+  {
+    id: 1,
     companyName: "ALPHA Industries SA",
-    nif: "1234567890",
-    sector: "Industrie",
-    region: "Dakar",
-    parentOrganization: "Groupe ALPHA International",
-    status: "client",
-    priority: "high",
+    email: "contact@alpha-industries.sn",
+    phoneNumber: "+221 33 123 45 67",
+    whatsappNumber: "+221 77 123 45 67",
+    birthDate: new Date("2020-01-15"),
+    imagePath: "",
     score: 85,
-    revenue: 2500000,
-    employees: 150,
-    address: {
-      street: "Avenue Léopold Sédar Senghor",
-      city: "Dakar",
-      postalCode: "BP 1234",
-      country: "Sénégal",
-    },
-    legalInfo: {
-      legalForm: "SA",
-      registrationNumber: "SN-DKR-2020-A-001",
-      vatNumber: "SN123456789",
-      documents: [],
-    },
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-12-01"),
-    lastInteraction: new Date("2024-01-15"),
+    postalBox: "BP 1234",
+    ifu: "1234567890",
+    rccm: "SN-DKR-2020-A-001",
+    legalForm: LegalForm.SA,
+    isProspect: false,
+    description: "Entreprise industrielle leader au Sénégal",
+    companyType: CompanyType.GROUP,
+    locationId: 1,
+    website: "https://alpha-industries.sn"
   },
   {
-    id: "2",
+    id: 2,
     companyName: "BETA Télécoms",
-    nif: "0987654321",
-    sector: "Télécommunications",
-    region: "Thiès",
-    status: "prospect",
-    priority: "medium",
+    email: "info@beta-telecom.sn",
+    phoneNumber: "+221 33 234 56 78",
+    whatsappNumber: "+221 77 234 56 78",
+    birthDate: new Date("2021-03-10"),
+    imagePath: "",
     score: 72,
-    revenue: 1800000,
-    employees: 95,
-    address: {
-      street: "Route de Dakar",
-      city: "Thiès",
-      postalCode: "BP 5678",
-      country: "Sénégal",
-    },
-    legalInfo: {
-      legalForm: "SARL",
-      registrationNumber: "SN-THS-2021-B-002",
-      documents: [],
-    },
-    createdAt: new Date("2024-01-12"),
-    updatedAt: new Date("2024-11-28"),
-    lastInteraction: new Date("2024-01-12"),
+    postalBox: "BP 5678",
+    ifu: "0987654321",
+    rccm: "SN-THS-2021-B-002",
+    legalForm: LegalForm.SARL,
+    isProspect: true,
+    description: "Opérateur de télécommunications",
+    companyType: CompanyType.AGENCY,
+    locationId: 2,
+    website: "https://beta-telecom.sn"
   },
+  {
+    id: 3,
+    companyName: "GAMMA ONG",
+    email: "contact@gamma-ong.org",
+    phoneNumber: "+221 33 345 67 89",
+    birthDate: new Date("2019-06-20"),
+    imagePath: "",
+    score: 92,
+    postalBox: "BP 9012",
+    ifu: "1122334455",
+    rccm: "SN-STL-2019-C-003",
+    legalForm: LegalForm.SARL,
+    isProspect: false,
+    description: "ONG de développement social",
+    companyType: CompanyType.AGENCY,
+    locationId: 3,
+    website: "https://gamma-ong.org"
+  }
 ];
 
 const mockContacts: Contact[] = [
   {
-    id: "1",
-    entityId: "1",
-    name: "Amadou Traoré",
-    role: "Directeur Général",
-    email: "a.traore@sonabel.bf",
-    phone: "+226 70 12 34 56",
-    whatsapp: "+226 70 12 34 56",
-    isPrimary: true,
-    createdAt: new Date("2024-01-15"),
+    id: 1,
+    firstName: "Amadou",
+    lastName: "Traoré",
+    email: "a.traore@alpha-industries.sn",
+    phoneNumber: "+221 77 123 45 67",
+    whatsappNumber: "+221 77 123 45 67",
+    birthDate: new Date("1975-05-15"),
+    imagePath: "",
+    score: 85,
+    postalBox: "BP 1234"
   },
   {
-    id: "2",
-    entityId: "2",
-    name: "Marie Ouédraogo",
-    role: "Directrice Financière",
-    email: "m.ouedraogo@orange.bf",
-    phone: "+226 71 23 45 67",
-    isPrimary: true,
-    createdAt: new Date("2024-02-10"),
+    id: 2,
+    firstName: "Marie",
+    lastName: "Ouédraogo",
+    email: "m.ouedraogo@beta-telecom.sn",
+    phoneNumber: "+221 77 234 56 78",
+    birthDate: new Date("1980-08-22"),
+    imagePath: "",
+    score: 78,
+    postalBox: "BP 5678"
   },
+  {
+    id: 3,
+    firstName: "Fatou",
+    lastName: "Diop",
+    email: "f.diop@gamma-ong.org",
+    phoneNumber: "+221 77 345 67 89",
+    whatsappNumber: "+221 77 345 67 89",
+    birthDate: new Date("1985-12-03"),
+    imagePath: "",
+    score: 90,
+    postalBox: "BP 9012"
+  }
 ];
 
-const mockUser: User = {
-  id: "1",
-  firstName: "Jean",
-  lastName: "Sawadogo",
-  email: "j.sawadogo@fidalli.bf",
-  role: "director",
-  permissions: [],
-  isActive: true,
-  lastLogin: new Date(),
-  createdAt: new Date(),
-};
+const mockMissions: Mission[] = [
+  {
+    id: 1,
+    name: "Audit Légal - ALPHA Industries",
+    description: "Audit légal annuel pour l'exercice 2024",
+    companyId: 1,
+    startDate: new Date("2024-01-15"),
+    endDate: new Date("2024-03-15"),
+    status: MissionStatus.IN_PROGRESS,
+    typeId: 1
+  },
+  {
+    id: 2,
+    name: "PCA - BETA Télécoms",
+    description: "Plan de Continuité d'Activité",
+    companyId: 2,
+    startDate: new Date("2024-02-01"),
+    endDate: new Date("2024-04-30"),
+    status: MissionStatus.PLANNED,
+    typeId: 2
+  }
+];
+
+const mockOpportunities: Opportunity[] = [
+  {
+    id: 1,
+    name: "Audit Annuel ALPHA",
+    description: "Proposition d'audit annuel pour ALPHA Industries",
+    deadline: new Date("2024-03-15"),
+    status: OpportunityStatus.OPEN,
+    sourceId: 1,
+    needId: 1
+  },
+  {
+    id: 2,
+    name: "Formation GAMMA",
+    description: "Formation en comptabilité pour GAMMA ONG",
+    deadline: new Date("2024-04-30"),
+    status: OpportunityStatus.TACKED_AND_CLOSED,
+    sourceId: 2,
+    needId: 2
+  }
+];
+
+const mockCollaborators: Collaborator[] = [
+  {
+    id: 1,
+    firstName: "Jean",
+    lastName: "Sawadogo",
+    email: "j.sawadogo@fidalli.sn",
+    phoneNumber: "+221 77 111 22 33",
+    birthDate: new Date("1980-01-01"),
+    imagePath: "",
+    score: 95,
+    postalBox: "BP 1111",
+    username: "j.sawadogo",
+    password: "hashed_password",
+    departmentId: 1
+  }
+];
 
 export const useStore = create<CombinedState>()(
   persist(
     (set, get) => ({
       // État initial
-      entities: mockEntities.map((entity) => ({
-        ...entity,
-        score: calculateEntityScore(entity),
-      })),
+      companies: mockCompanies,
       contacts: mockContacts,
-      missions: [],
-      opportunities: [],
-      interactions: [],
-      currentUser: mockUser,
-      selectedEntity: null,
+      missions: mockMissions,
+      opportunities: mockOpportunities,
+      collaborators: mockCollaborators,
+      currentUser: mockCollaborators[0],
+      selectedCompany: null,
       isLoading: false,
       
       // Pagination et filtres
       pagination: {
-        entities: { page: 0, size: 20 },
+        companies: { page: 0, size: 20 },
         contacts: { page: 0, size: 20 },
         missions: { page: 0, size: 20 },
         opportunities: { page: 0, size: 20 },
       },
       
       filters: {
-        entities: {},
+        companies: {},
         contacts: {},
         missions: {},
         opportunities: {},
@@ -164,56 +270,49 @@ export const useStore = create<CombinedState>()(
 
       // Actions UI
       setCurrentUser: (user) => set({ currentUser: user }),
-      setSelectedEntity: (entity) => set({ selectedEntity: entity }),
+      setSelectedCompany: (company) => set({ selectedCompany: company }),
       setLoading: (loading) => set({ isLoading: loading }),
 
-      // Actions Entity
-      addEntity: (entityData) => {
-        const id = Date.now().toString();
-        const createdAt = new Date();
-        const updatedAt = new Date();
-        const entity: Entity = {
-          ...entityData,
+      // Actions Company
+      addCompany: (companyData) => {
+        const id = Math.max(...get().companies.map(c => c.id || 0)) + 1;
+        const company: Company = {
+          ...companyData,
           id,
-          createdAt,
-          updatedAt,
-          score: calculateEntityScore({
-            ...entityData,
-            id,
-            createdAt,
-            updatedAt,
-          }),
+          score: calculateCompanyScore(companyData),
         };
-        set((state) => ({ entities: [...state.entities, entity] }));
+        set((state) => ({ companies: [...state.companies, company] }));
       },
 
-      updateEntity: (id, updates) => {
+      updateCompany: (id, updates) => {
         set((state) => ({
-          entities: state.entities.map((entity) => {
-            if (entity.id === id) {
-              const updated = { ...entity, ...updates, updatedAt: new Date() };
-              return { ...updated, score: calculateEntityScore(updated) };
+          companies: state.companies.map((company) => {
+            if (company.id === id) {
+              const updated = { ...company, ...updates };
+              return { ...updated, score: calculateCompanyScore(updated) };
             }
-            return entity;
+            return company;
           }),
         }));
       },
 
-      deleteEntity: (id) => {
+      deleteCompany: (id) => {
         set((state) => ({
-          entities: state.entities.filter((entity) => entity.id !== id),
-          contacts: state.contacts.filter((contact) => contact.entityId !== id),
-          missions: state.missions.filter((mission) => mission.entityId !== id),
-          opportunities: state.opportunities.filter((opp) => opp.entityId !== id),
+          companies: state.companies.filter((company) => company.id !== id),
+          contacts: state.contacts.filter((contact) => {
+            // Vérifier si le contact appartient à cette entreprise via Experience
+            return true; // TODO: implémenter la logique avec Experience
+          }),
+          missions: state.missions.filter((mission) => mission.companyId !== id),
         }));
       },
 
       // Contact actions
       addContact: (contactData) => {
+        const id = Math.max(...get().contacts.map(c => c.id || 0)) + 1;
         const contact: Contact = {
           ...contactData,
-          id: Date.now().toString(),
-          createdAt: new Date(),
+          id,
         };
         set((state) => ({ contacts: [...state.contacts, contact] }));
       },
@@ -234,11 +333,10 @@ export const useStore = create<CombinedState>()(
 
       // Actions Mission
       addMission: (missionData) => {
+        const id = Math.max(...get().missions.map(m => m.id || 0)) + 1;
         const mission: Mission = {
           ...missionData,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          id,
         };
         set((state) => ({ missions: [...state.missions, mission] }));
       },
@@ -246,7 +344,7 @@ export const useStore = create<CombinedState>()(
       updateMission: (id, updates) => {
         set((state) => ({
           missions: state.missions.map((mission) =>
-            mission.id === id ? { ...mission, ...updates, updatedAt: new Date() } : mission
+            mission.id === id ? { ...mission, ...updates } : mission
           ),
         }));
       },
@@ -259,11 +357,10 @@ export const useStore = create<CombinedState>()(
 
       // Actions Opportunity
       addOpportunity: (opportunityData) => {
+        const id = Math.max(...get().opportunities.map(o => o.id || 0)) + 1;
         const opportunity: Opportunity = {
           ...opportunityData,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          id,
         };
         set((state) => ({ opportunities: [...state.opportunities, opportunity] }));
       },
@@ -271,7 +368,7 @@ export const useStore = create<CombinedState>()(
       updateOpportunity: (id, updates) => {
         set((state) => ({
           opportunities: state.opportunities.map((opp) =>
-            opp.id === id ? { ...opp, ...updates, updatedAt: new Date() } : opp
+            opp.id === id ? { ...opp, ...updates } : opp
           ),
         }));
       },
@@ -282,55 +379,29 @@ export const useStore = create<CombinedState>()(
         }));
       },
 
-      // Actions Interaction
-      addInteraction: (interactionData) => {
-        const interaction: Interaction = {
-          ...interactionData,
-          id: Date.now().toString(),
-          date: new Date(),
-          userId: get().currentUser?.id || 'unknown',
-        };
-        set((state) => ({ interactions: [...state.interactions, interaction] }));
-      },
-
-      updateInteraction: (id, updates) => {
-        set((state) => ({
-          interactions: state.interactions.map((interaction) =>
-            interaction.id === id ? { ...interaction, ...updates } : interaction
-          ),
-        }));
-      },
-
-      deleteInteraction: (id) => {
-        set((state) => ({
-          interactions: state.interactions.filter((interaction) => interaction.id !== id),
-        }));
-      },
-
       // Fonctions utilitaires
-      calculateScore: calculateEntityScore,
-
-      getEntitiesByStatus: (status) => {
-        return get().entities.filter((entity) => entity.status === status);
+      getCompaniesByStatus: (isProspect) => {
+        return get().companies.filter((company) => company.isProspect === isProspect);
       },
 
-      getContactsByEntity: (entityId) => {
-        return get().contacts.filter((contact) => contact.entityId === entityId);
+      getContactsByCompany: (companyId) => {
+        // TODO: Implémenter avec Experience pour lier contacts et entreprises
+        return get().contacts;
       },
 
-      getMissionsByEntity: (entityId) => {
-        return get().missions.filter((mission) => mission.entityId === entityId);
+      getMissionsByCompany: (companyId) => {
+        return get().missions.filter((mission) => mission.companyId === companyId);
       },
 
-      getOpportunitiesByEntity: (entityId) => {
-        return get().opportunities.filter((opp) => opp.entityId === entityId);
+      getOpportunitiesByCompany: (companyId) => {
+        // TODO: Implémenter la logique pour lier opportunités et entreprises
+        return get().opportunities;
       },
     }),
     {
       name: 'fidalli-crm-store',
       partialize: (state) => ({
-        // Persister seulement certaines données
-        entities: state.entities,
+        companies: state.companies,
         contacts: state.contacts,
         missions: state.missions,
         opportunities: state.opportunities,
