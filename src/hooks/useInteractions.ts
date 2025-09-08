@@ -98,7 +98,7 @@ export const useInteractions = () => {
     );
   }, [interactions]);
 
-  const getInteractionsRequiringFollowUp = useCallback>(): Interaction[] => {
+  const getInteractionsRequiringFollowUp = useCallback((): Interaction[] => {
     return interactions.filter(interaction => 
       interaction.followUpRequired && 
       interaction.followUpDate &&
