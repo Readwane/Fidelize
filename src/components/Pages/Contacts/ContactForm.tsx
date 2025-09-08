@@ -26,6 +26,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -60,8 +61,13 @@ const ContactForm: React.FC<ContactFormProps> = ({
     e.preventDefault();
 
     if (validateForm()) {
-      onSave(formData);
-      onClose();
+      setIsSubmitting(true);
+      // Simuler un délai d'API
+      setTimeout(() => {
+        onSave(formData);
+        onClose();
+        setIsSubmitting(false);
+      }, 500);
     }
   };
 
@@ -73,7 +79,18 @@ const ContactForm: React.FC<ContactFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-h-[70vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <h3 className="text-sm font-medium text-blue-900">Informations du contact</h3>
+          </div>
+          <p className="text-xs text-blue-700 mt-1">
+            Renseignez les informations principales du contact
+          </p>
+        </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -83,10 +100,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
             type="text"
             value={formData.name}
             onChange={(e) => handleChange("name", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.name ? "border-red-300" : "border-gray-300"
             }`}
             placeholder="Ex: Jean Dupont"
+            disabled={isSubmitting}
           />
           {errors.name && (
             <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -100,9 +118,10 @@ const ContactForm: React.FC<ContactFormProps> = ({
           <select
             value={formData.entityId}
             onChange={(e) => handleChange("entityId", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.entityId ? "border-red-300" : "border-gray-300"
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Sélectionner une entreprise</option>
             {entities.map((entity) => (
@@ -126,10 +145,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
             type="text"
             value={formData.role}
             onChange={(e) => handleChange("role", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.role ? "border-red-300" : "border-gray-300"
             }`}
             placeholder="Ex: Directeur Général"
+            disabled={isSubmitting}
           />
           {errors.role && (
             <p className="text-red-500 text-xs mt-1">{errors.role}</p>
@@ -144,10 +164,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
             type="email"
             value={formData.email}
             onChange={(e) => handleChange("email", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.email ? "border-red-300" : "border-gray-300"
             }`}
             placeholder="jean.dupont@entreprise.com"
+            disabled={isSubmitting}
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -164,10 +185,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
             type="tel"
             value={formData.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.phone ? "border-red-300" : "border-gray-300"
             }`}
             placeholder="+226 70 12 34 56"
+            disabled={isSubmitting}
           />
           {errors.phone && (
             <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -182,35 +204,61 @@ const ContactForm: React.FC<ContactFormProps> = ({
             type="tel"
             value={formData.whatsapp}
             onChange={(e) => handleChange("whatsapp", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             placeholder="+226 70 12 34 56"
+            disabled={isSubmitting}
           />
         </div>
       </div>
 
       <div>
-        <label className="flex items-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <label className="flex items-center cursor-pointer">
           <input
             type="checkbox"
             checked={formData.isPrimary}
             onChange={(e) => handleChange("isPrimary", e.target.checked)}
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            disabled={isSubmitting}
           />
-          <span className="ml-2 text-sm text-gray-700">
-            Contact principal de l'entreprise
-          </span>
+            <div className="ml-3">
+              <span className="text-sm font-medium text-gray-900">
+                Contact principal de l'entreprise
+              </span>
+              <p className="text-xs text-gray-600">
+                Ce contact sera utilisé comme référent principal pour cette entreprise
+              </p>
+            </div>
         </label>
+        </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="secondary" onClick={onClose}>
+      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+        <Button 
+          type="button" 
+          variant="secondary" 
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
           Annuler
         </Button>
-        <Button type="submit">
+        <Button 
+          type="submit"
+          disabled={isSubmitting}
+          className="min-w-[120px]"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Enregistrement...</span>
+            </div>
+          ) : (
           {contact ? "Modifier" : "Créer"} le Contact
+          )}
         </Button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

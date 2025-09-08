@@ -35,6 +35,9 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -106,6 +109,9 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
     e.preventDefault();
     
     if (validateForm()) {
+      setIsSubmitting(true);
+      // Simuler un délai d'API
+      setTimeout(() => {
       const entityData = {
         ...formData,
         createdAt: entity?.createdAt || new Date(),
@@ -114,6 +120,8 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
       };
       onSave(entityData);
       onClose();
+        setIsSubmitting(false);
+      }, 800);
     }
   };
 
@@ -142,7 +150,47 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-h-[80vh] overflow-y-auto">
+      {/* Progress Steps */}
+      <div className="mb-6 px-6 py-4 bg-gray-50 -mx-6 -mt-6 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          {[1, 2, 3].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step <= currentStep 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-600'
+              }`}>
+                {step}
+              </div>
+              <span className={`ml-2 text-sm ${
+                step <= currentStep ? 'text-blue-600 font-medium' : 'text-gray-500'
+              }`}>
+                {step === 1 ? 'Informations générales' : 
+                 step === 2 ? 'Adresse & Légal' : 
+                 'Validation'}
+              </span>
+              {step < totalSteps && (
+                <div className={`w-12 h-0.5 mx-4 ${
+                  step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                }`}></div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Step 1: Informations générales */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-1">Étape 1 : Informations générales</h3>
+              <p className="text-xs text-blue-700">
+                Renseignez les informations de base de l'entreprise
+              </p>
+            </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -152,10 +200,11 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             type="text"
             value={formData.companyName}
             onChange={(e) => handleChange('companyName', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.companyName ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="Ex: ALPHA Industries SA"
+            disabled={isSubmitting}
           />
           {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
         </div>
@@ -168,8 +217,9 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             type="text"
             value={formData.nif}
             onChange={(e) => handleChange('nif', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             placeholder="Ex: 1234567890"
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -182,9 +232,10 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
           <select
             value={formData.sector}
             onChange={(e) => handleChange('sector', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.sector ? 'border-red-300' : 'border-gray-300'
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Sélectionner un secteur</option>
             <option value="Industrie">Industrie</option>
@@ -211,8 +262,9 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             type="text"
             value={formData.parentOrganization}
             onChange={(e) => handleChange('parentOrganization', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             placeholder="Ex: Ministère de l'Énergie"
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -225,9 +277,10 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
           <select
             value={formData.region}
             onChange={(e) => handleChange('region', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.region ? 'border-red-300' : 'border-gray-300'
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Sélectionner une région</option>
             <option value="Dakar">Dakar</option>
@@ -253,16 +306,29 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
           <select
             value={formData.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            disabled={isSubmitting}
           >
             <option value="prospect">Prospect</option>
             <option value="client">Client</option>
           </select>
         </div>
       </div>
+          </div>
+        )}
+
+        {/* Step 2: Adresse & Légal */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-green-900 mb-1">Étape 2 : Adresse & Informations légales</h3>
+              <p className="text-xs text-green-700">
+                Complétez l'adresse et les informations légales
+              </p>
+            </div>
 
       {/* Section Adresse */}
-      <div className="border-t pt-6">
+      <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Adresse</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
@@ -273,10 +339,11 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
               type="text"
               value={formData.address.street}
               onChange={(e) => handleAddressChange('street', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                 errors.street ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Ex: Avenue Kwame Nkrumah"
+              disabled={isSubmitting}
             />
             {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
           </div>
@@ -289,10 +356,11 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
               type="text"
               value={formData.address.city}
               onChange={(e) => handleAddressChange('city', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                 errors.city ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Ex: Ouagadougou"
+              disabled={isSubmitting}
             />
             {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
           </div>
@@ -305,15 +373,16 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
               type="text"
               value={formData.address.postalCode}
               onChange={(e) => handleAddressChange('postalCode', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               placeholder="Ex: 01 BP 1234"
+              disabled={isSubmitting}
             />
           </div>
         </div>
       </div>
 
       {/* Section Informations légales */}
-      <div className="border-t pt-6">
+      <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Informations légales</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -323,7 +392,8 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             <select
               value={formData.legalInfo.legalForm}
               onChange={(e) => handleLegalInfoChange('legalForm', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              disabled={isSubmitting}
             >
               <option value="">Sélectionner une forme juridique</option>
               <option value="SA">Société Anonyme (SA)</option>
@@ -346,12 +416,25 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
               type="text"
               value={formData.legalInfo.registrationNumber}
               onChange={(e) => handleLegalInfoChange('registrationNumber', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               placeholder="Ex: BF-OUA-2023-A-001"
+              disabled={isSubmitting}
             />
           </div>
         </div>
       </div>
+          </div>
+        )}
+
+        {/* Step 3: Validation */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-purple-900 mb-1">Étape 3 : Validation</h3>
+              <p className="text-xs text-purple-700">
+                Vérifiez les informations et finalisez la création
+              </p>
+            </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -362,10 +445,11 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             type="number"
             value={formData.revenue}
             onChange={(e) => handleChange('revenue', parseInt(e.target.value) || undefined)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.revenue ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="2500000"
+            disabled={isSubmitting}
           />
           {errors.revenue && <p className="text-red-500 text-xs mt-1">{errors.revenue}</p>}
         </div>
@@ -378,10 +462,11 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
             type="number"
             value={formData.employees}
             onChange={(e) => handleChange('employees', parseInt(e.target.value) || undefined)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.employees ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="150"
+            disabled={isSubmitting}
           />
           {errors.employees && <p className="text-red-500 text-xs mt-1">{errors.employees}</p>}
         </div>
@@ -394,7 +479,8 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
         <select
           value={formData.priority}
           onChange={(e) => handleChange('priority', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+          disabled={isSubmitting}
         >
           <option value="low">Faible</option>
           <option value="medium">Moyenne</option>
@@ -403,22 +489,79 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
         </select>
       </div>
 
-      <div className="bg-blue-50 p-4 rounded-lg">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
         <h4 className="text-sm font-medium text-blue-900 mb-2">Score calculé automatiquement</h4>
-        <div className="text-2xl font-bold text-blue-600">{calculateScore()}/100</div>
+        <div className="flex items-center space-x-4">
+          <div className="text-3xl font-bold text-blue-600">{calculateScore()}/100</div>
+          <div className="flex-1">
+            <div className="w-full bg-blue-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                style={{ width: `${calculateScore()}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
         <p className="text-xs text-blue-700 mt-1">
           Basé sur le CA, les effectifs et le statut client
         </p>
       </div>
+          </div>
+        )}
 
-      <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        {/* Navigation Steps */}
+        <div className="flex justify-between items-center pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+          <div className="flex space-x-3">
+            {currentStep > 1 && (
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => setCurrentStep(currentStep - 1)}
+                disabled={isSubmitting}
+              >
+                Précédent
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
           Annuler
         </Button>
-        <Button type="submit">
-          {entity ? 'Modifier' : 'Créer'} l'Entreprise
-        </Button>
+            
+            {currentStep < totalSteps ? (
+              <Button 
+                type="button" 
+                onClick={() => setCurrentStep(currentStep + 1)}
+                disabled={isSubmitting}
+              >
+                Suivant
+              </Button>
+            ) : (
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+                className="min-w-[140px]"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Enregistrement...</span>
+                  </div>
+                ) : (
+                  `${entity ? 'Modifier' : 'Créer'} l'Entreprise`
+                )}
+              </Button>
+            )}
+          </div>
       </div>
+      </form>
+    </div>
     </form>
   );
 };

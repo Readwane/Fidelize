@@ -30,6 +30,7 @@ const MissionForm: React.FC<MissionFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -62,6 +63,9 @@ const MissionForm: React.FC<MissionFormProps> = ({
     e.preventDefault();
 
     if (validateForm()) {
+      setIsSubmitting(true);
+      // Simuler un délai d'API
+      setTimeout(() => {
       const missionData = {
         ...formData,
         startDate: new Date(formData.startDate),
@@ -74,6 +78,8 @@ const MissionForm: React.FC<MissionFormProps> = ({
       };
       onSave(missionData);
       onClose();
+        setIsSubmitting(false);
+      }, 600);
     }
   };
 
@@ -100,7 +106,18 @@ const MissionForm: React.FC<MissionFormProps> = ({
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-h-[75vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <h3 className="text-sm font-medium text-orange-900">Nouvelle mission</h3>
+          </div>
+          <p className="text-xs text-orange-700 mt-1">
+            Créez une nouvelle mission pour votre client
+          </p>
+        </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -110,10 +127,11 @@ const MissionForm: React.FC<MissionFormProps> = ({
             type="text"
             value={formData.title}
             onChange={(e) => handleChange('title', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.title ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="Ex: Audit annuel - Société ABC"
+            disabled={isSubmitting}
           />
           {errors.title && (
             <p className="text-red-500 text-xs mt-1">{errors.title}</p>
@@ -127,7 +145,8 @@ const MissionForm: React.FC<MissionFormProps> = ({
           <select
             value={formData.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            disabled={isSubmitting}
           >
             {missionTypes.map((type) => (
               <option key={type.value} value={type.value}>
@@ -146,9 +165,10 @@ const MissionForm: React.FC<MissionFormProps> = ({
           <select
             value={formData.entityId}
             onChange={(e) => handleChange('entityId', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.entityId ? 'border-red-300' : 'border-gray-300'
             }`}
+            disabled={isSubmitting}
           >
             <option value="">Sélectionner une entreprise</option>
             {entities.map((entity) => (
@@ -169,7 +189,8 @@ const MissionForm: React.FC<MissionFormProps> = ({
           <select
             value={formData.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            disabled={isSubmitting}
           >
             <option value="draft">Brouillon</option>
             <option value="active">Active</option>
@@ -189,9 +210,10 @@ const MissionForm: React.FC<MissionFormProps> = ({
             type="date"
             value={formData.startDate}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
               errors.startDate ? 'border-red-300' : 'border-gray-300'
             }`}
+            disabled={isSubmitting}
           />
           {errors.startDate && (
             <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>
@@ -206,7 +228,8 @@ const MissionForm: React.FC<MissionFormProps> = ({
             type="date"
             value={formData.endDate}
             onChange={(e) => handleChange('endDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -219,10 +242,11 @@ const MissionForm: React.FC<MissionFormProps> = ({
           type="number"
           value={formData.budget}
           onChange={(e) => handleChange('budget', parseInt(e.target.value) || 0)}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
             errors.budget ? 'border-red-300' : 'border-gray-300'
           }`}
           placeholder="45000000"
+          disabled={isSubmitting}
         />
         {errors.budget && (
           <p className="text-red-500 text-xs mt-1">{errors.budget}</p>
@@ -233,9 +257,9 @@ const MissionForm: React.FC<MissionFormProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Équipe assignée
         </label>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3 p-4 border border-gray-200 rounded-lg">
           {teamMembers.map((member) => (
-            <label key={member.id} className="flex items-center">
+            <label key={member.id} className="flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.assignedUsers.includes(member.id)}
@@ -247,6 +271,7 @@ const MissionForm: React.FC<MissionFormProps> = ({
                   }
                 }}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                disabled={isSubmitting}
               />
               <span className="ml-2 text-sm text-gray-700">{member.name}</span>
             </label>
@@ -262,24 +287,43 @@ const MissionForm: React.FC<MissionFormProps> = ({
           rows={4}
           value={formData.description}
           onChange={(e) => handleChange('description', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none ${
             errors.description ? 'border-red-300' : 'border-gray-300'
           }`}
           placeholder="Description détaillée de la mission..."
+          disabled={isSubmitting}
         />
         {errors.description && (
           <p className="text-red-500 text-xs mt-1">{errors.description}</p>
         )}
       </div>
 
-      <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+          <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
           Annuler
         </Button>
-        <Button type="submit">
-          {mission ? 'Modifier' : 'Créer'} la Mission
-        </Button>
+          <Button 
+            type="submit"
+            disabled={isSubmitting}
+            className="min-w-[140px]"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Création...</span>
+              </div>
+            ) : (
+              `${mission ? 'Modifier' : 'Créer'} la Mission`
+            )}
+          </Button>
       </div>
+      </form>
+    </div>
     </form>
   );
 };

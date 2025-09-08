@@ -18,6 +18,37 @@ import Interactions from "./components/Pages/Interactions/Interactions";
 function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Écouter les changements de plein écran
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Raccourcis clavier
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K pour la recherche
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Rechercher"]') as HTMLInputElement;
+        searchInput?.focus();
+      }
+      
+      // Échap pour fermer les modales
+      if (e.key === 'Escape') {
+        // Logique pour fermer les modales ouvertes
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const renderContent = () => {
     switch (activeSection) {
@@ -109,7 +140,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className={`min-h-screen bg-gray-50 flex ${isFullscreen ? 'fixed inset-0' : ''}`}>
       {/* Sidebar */}
       <div
         className={`${
@@ -126,8 +157,8 @@ function App() {
       <div className="flex-1 flex flex-col">
         <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">{renderContent()}</div>
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="p-6 lg:p-8">{renderContent()}</div>
         </main>
       </div>
     </div>

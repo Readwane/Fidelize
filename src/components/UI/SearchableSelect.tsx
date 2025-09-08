@@ -28,6 +28,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const selectedOption = options.find(option => option.value === value);
   
@@ -35,11 +36,41 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Navigation au clavier
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev < filteredOptions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev > 0 ? prev - 1 : filteredOptions.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
+          handleSelect(filteredOptions[highlightedIndex].value);
+        }
+        break;
+      case 'Escape':
+        setIsOpen(false);
+        setSearchTerm("");
+        break;
+    }
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setSearchTerm("");
+        setHighlightedIndex(-1);
       }
     };
 
@@ -47,10 +78,14 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchTerm]);
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
     setSearchTerm("");
+    setHighlightedIndex(-1);
   };
 
   const handleToggle = () => {
@@ -68,6 +103,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
         type="button"
         onClick={handleToggle}
         disabled={disabled}
+        onKeyDown={handleKeyDown}
         className={`w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
           disabled ? 'bg-gray-100 cursor-not-allowed' : 'hover:border-gray-400'
         }`}
@@ -83,7 +119,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 flex flex-col">
           <div className="p-2 border-b border-gray-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -92,26 +128,30 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Rechercher..."
                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
           
-          <div className="max-h-60 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500 text-center">
                 Aucun résultat trouvé
               </div>
             ) : (
-              filteredOptions.map((option) => (
+              filteredOptions.map((option, index) => (
                 <button
                   key={option.value}
                   onClick={() => !option.disabled && handleSelect(option.value)}
                   disabled={option.disabled}
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center justify-between ${
+                  className={`w-full px-3 py-2 text-left text-sm focus:outline-none flex items-center justify-between transition-colors ${
                     option.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-900'
-                  } ${value === option.value ? 'bg-blue-50 text-blue-600' : ''}`}
+                  } ${
+                    value === option.value ? 'bg-blue-50 text-blue-600' : 
+                    index === highlightedIndex ? 'bg-gray-100' : 'hover:bg-gray-50'
+                  }`}
                 >
                   <span>{option.label}</span>
                   {value === option.value && (
