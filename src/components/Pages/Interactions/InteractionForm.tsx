@@ -311,7 +311,6 @@ const InteractionForm: React.FC<InteractionFormProps> = ({
       </div>
       </form>
     </div>
-    </form>
   );
 };
 

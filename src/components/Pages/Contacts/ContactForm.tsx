@@ -253,7 +253,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
               <span>Enregistrement...</span>
             </div>
           ) : (
-          {contact ? "Modifier" : "Créer"} le Contact
+          {`${contact ? "Modifier" : "Créer"} le Contact`}
           )}
         </Button>
       </div>
