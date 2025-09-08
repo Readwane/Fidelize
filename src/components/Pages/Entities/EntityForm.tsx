@@ -562,7 +562,6 @@ const EntityForm: React.FC<EntityFormProps> = ({ entity, onClose, onSave }) => {
       </div>
       </form>
     </div>
-    </form>
   );
 };
 
