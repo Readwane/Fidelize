@@ -298,7 +298,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
             <div className="mt-2 flex items-center space-x-2">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
               <span className="text-xs text-orange-700 font-medium">
-                Approbation requise (montant > 50M FCFA)
+                Approbation requise (montant &gt; 50M FCFA)
               </span>
             </div>
           )}

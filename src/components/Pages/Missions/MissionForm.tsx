@@ -324,7 +324,6 @@ const MissionForm: React.FC<MissionFormProps> = ({
       </div>
       </form>
     </div>
-    </form>
   );
 };
 
